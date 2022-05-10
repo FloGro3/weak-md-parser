@@ -71,10 +71,12 @@ public class MarkdownParser {
     }
 
     private String parseInnerContent(String markdown) {
-        return parseBold(parseItalic(markdown));
+        String boldParsed = parseBold(markdown);
+        return parseItalic(boldParsed);
     }
 
     private String parseItalic(String markdown){
+        //Um die Methode vor parseBold() verwenden zu können, müsste das Erkennen des TeilStrings verändert werden, z.B. per RegExp
         String lookingFor = "_(.+)_";
         String update = "<em>$1</em>";
         return markdown.replaceAll(lookingFor, update);
