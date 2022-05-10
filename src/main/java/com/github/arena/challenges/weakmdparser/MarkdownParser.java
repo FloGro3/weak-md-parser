@@ -39,6 +39,8 @@ public class MarkdownParser {
             result = result + "</ul>";
         }
 
+        result = parseInnerContent(result);
+
         return result;
     }
 
@@ -51,23 +53,21 @@ public class MarkdownParser {
 
         if (count == 0) {
             return null;
+        } else {
+            return String.format("<h%d>%s</h%d>", count, markdown.substring(count + 1), count);
         }
-
-        return "<h" + Integer.toString(count) + ">" + markdown.substring(count + 1) + "</h" + Integer.toString(count) + ">";
     }
 
     private String parseListItem(String markdown) {
         if (markdown.startsWith("*")) {
-            String skipAsterisk = markdown.substring(2);
-            String listItemString = parseInnerContent(skipAsterisk);
-            return "<li>" + listItemString + "</li>";
+            return String.format("<li>%s</li>", markdown.substring(2));
+        } else {
+            return null;
         }
-
-        return null;
     }
 
     private String parseParagraph(String markdown) {
-        return "<p>" + parseInnerContent(markdown) + "</p>";
+        return String.format("<p>%s</p>", markdown);
     }
 
     private String parseInnerContent(String markdown) {
