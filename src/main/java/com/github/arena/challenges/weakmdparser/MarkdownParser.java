@@ -1,5 +1,8 @@
 package com.github.arena.challenges.weakmdparser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MarkdownParser {
 
     public MarkdownParser() {
@@ -8,35 +11,27 @@ public class MarkdownParser {
     public String parse(String markdown) {
         String[] lines = markdown.split("\n");
         String result = "";
-        boolean activeList = false;
+        List<String> listItems = new ArrayList<String>();
 
         for (int i = 0; i < lines.length; i++) {
 
-            String theLine = parseHeader(lines[i]);
-
-            if (theLine == null) {
-                theLine = parseListItem(lines[i]);
+            if (isListItem(lines[i])){
+                listItems.add(lines[i]);
+                if(i+1 == lines.length){
+                    result += parseList(listItems);
+                }
+                continue;
+            }else if (!listItems.isEmpty()){
+                result += parseList(listItems);
+                listItems.clear();
             }
 
-            if (theLine == null) {
-                theLine = parseParagraph(lines[i]);
+            if(isHeader(lines[i])){
+                result += parseHeader(lines[i]);
+                continue;
             }
 
-            if (theLine.matches("(<li>).*") && !theLine.matches("(<h).*") && !theLine.matches("(<p>).*") && !activeList) {
-                activeList = true;
-                result = result + "<ul>";
-                result = result + theLine;
-            } else if (!theLine.matches("(<li>).*") && activeList) {
-                activeList = false;
-                result = result + "</ul>";
-                result = result + theLine;
-            } else {
-                result = result + theLine;
-            }
-        }
-
-        if (activeList) {
-            result = result + "</ul>";
+            result += parseParagraph(lines[i]);
         }
 
         result = parseInnerContent(result);
@@ -54,20 +49,16 @@ public class MarkdownParser {
         if (count == 0) {
             return null;
         } else {
-            return String.format("<h%d>%s</h%d>", count, markdown.substring(count + 1), count);
+            return "<h" + count + ">" + markdown.substring(count + 1) + "</h" + count + ">";
         }
     }
 
     private String parseListItem(String markdown) {
-        if (markdown.startsWith("*")) {
-            return String.format("<li>%s</li>", markdown.substring(2));
-        } else {
-            return null;
-        }
+        return "<li>" + markdown.substring(2) + "</li>";
     }
 
     private String parseParagraph(String markdown) {
-        return String.format("<p>%s</p>", markdown);
+        return "<p>" + markdown + "</p>";
     }
 
     private String parseInnerContent(String markdown) {
@@ -86,5 +77,30 @@ public class MarkdownParser {
         String lookingFor = "__(.+)__";
         String update = "<strong>$1</strong>";
         return markdown.replaceAll(lookingFor, update);
+    }
+
+    private String parseList(List<String> listItems){
+        //Für viele aufeinander folgende ListItems besser einen StringBuilder oder StringBuffer für bessere Perfomance einsetzen
+        String result = "";
+        for (String listItem:listItems){
+            result += parseListItem(listItem);
+        }
+        return "<ul>" + result + "</ul>";
+    }
+
+    private boolean isListItem(String markdown){
+        if (markdown.startsWith("*")){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isHeader(String markdown){
+        if (markdown.startsWith("#")){
+            return true;
+        } else {
+            return false;
+        }
     }
 }
